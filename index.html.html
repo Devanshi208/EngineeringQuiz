@@ -1,0 +1,882 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Which Engineering Field Are You?</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg-deep:#07060d;
+    --ink:#f4f2fb;
+    --ink-dim:#9a92b8;
+    --ink-faint:#5e577c;
+    --accent:#7c5cff;
+    --accent-soft:rgba(124,92,255,.35);
+    --line:rgba(255,255,255,.09);
+    color-scheme: dark;
+    box-sizing:border-box;
+    padding-top:env(safe-area-inset-top,0px);
+    padding-bottom:env(safe-area-inset-bottom,0px);
+  }
+  *,*::before,*::after{box-sizing:inherit;}
+  html{scroll-padding-top:env(safe-area-inset-top,0px);}
+  html,body{
+    height:100%; margin:0; background:var(--bg-deep); color:var(--ink);
+    font-family:'Inter',-apple-system,sans-serif; -webkit-font-smoothing:antialiased;
+    overflow-x:hidden;
+  }
+  h1,h2,h3,.display{font-family:'Space Grotesk',sans-serif;}
+
+  #bg-canvas{
+    position:fixed; inset:0; width:100%; height:100%; z-index:0; pointer-events:none;
+    background:
+      radial-gradient(ellipse 80% 60% at 20% 10%, rgba(124,92,255,.18), transparent 60%),
+      radial-gradient(ellipse 70% 50% at 85% 85%, rgba(0,206,201,.12), transparent 60%),
+      var(--bg-deep);
+  }
+  #app{position:relative; z-index:1; min-height:100%;}
+  .screen{ display:none; min-height:100vh; min-height:100dvh; width:100%;
+    padding:32px 20px calc(32px + env(safe-area-inset-bottom,0px)); align-items:center; justify-content:center; }
+  .screen.active{display:flex;}
+
+  /* ---------- LANDING ---------- */
+  #landing{ position:relative; overflow:hidden; flex-direction:column; text-align:center; }
+  .chip-field{ position:absolute; inset:0; z-index:0; overflow:hidden; }
+  .chip{ position:absolute; display:flex; align-items:center; gap:8px; padding:10px 16px;
+    border:1px solid var(--line); border-radius:100px; background:rgba(255,255,255,.03);
+    backdrop-filter:blur(6px); font-size:13px; color:var(--ink-dim); white-space:nowrap;
+    opacity:.55; animation:drift linear infinite; }
+  .chip .e{font-size:16px;}
+  @keyframes drift{
+    0%{ transform:translateY(0) translateX(0) rotate(0deg); }
+    50%{ transform:translateY(-22px) translateX(10px) rotate(1.5deg); }
+    100%{ transform:translateY(0) translateX(0) rotate(0deg); }
+  }
+  .landing-inner{ position:relative; z-index:2; max-width:640px; margin:0 auto; }
+  .kicker{ font-size:14px; color:var(--ink-dim); margin-bottom:18px; }
+  .landing-inner h1{ font-size:clamp(2.4rem, 7vw, 4.2rem); line-height:1.05; font-weight:700; margin:0 0 18px;
+    background:linear-gradient(135deg,#fff 20%, #b9aaff 60%, #6ee7db 100%);
+    -webkit-background-clip:text; background-clip:text; color:transparent; }
+  .landing-inner p{ font-size:17px; color:var(--ink-dim); line-height:1.6; max-width:480px; margin:0 auto 34px; }
+  .btn{ appearance:none; border:none; cursor:pointer; font-family:'Inter',sans-serif; font-weight:600; font-size:16px;
+    padding:16px 34px; border-radius:100px; background:linear-gradient(135deg, var(--accent), #4fd1c5); color:#0a0714;
+    transition:transform .25s ease, box-shadow .25s ease; box-shadow:0 12px 30px -10px rgba(124,92,255,.55); }
+  .btn:hover{ transform:translateY(-2px); box-shadow:0 16px 36px -8px rgba(124,92,255,.7); }
+  .btn:active{ transform:translateY(0px) scale(.98); }
+  .btn:focus-visible{ outline:2px solid #fff; outline-offset:3px; }
+  .btn-ghost{ appearance:none; border:1px solid var(--line); cursor:pointer; background:transparent; color:var(--ink-dim);
+    font-family:'Inter',sans-serif; font-weight:600; font-size:15px; padding:14px 28px; border-radius:100px;
+    transition:border-color .2s ease, color .2s ease; }
+  .btn-ghost:hover{ border-color:rgba(255,255,255,.3); color:var(--ink); }
+  .btn-ghost:focus-visible{ outline:2px solid #fff; outline-offset:3px; }
+  .meta-line{ margin-top:22px; font-size:13px; color:var(--ink-faint); }
+
+  /* ---------- QUIZ ---------- */
+  #quiz{ flex-direction:column; }
+  .quiz-wrap{ width:100%; max-width:680px; margin:0 auto; position:relative; }
+  .path{ display:flex; gap:6px; margin-bottom:34px; }
+  .path i{ flex:1; height:4px; border-radius:4px; background:rgba(255,255,255,.1); overflow:hidden; position:relative; }
+  .path i b{ position:absolute; inset:0; width:0%; background:var(--accent,#7c5cff); border-radius:4px; transition:width .5s ease, background .4s ease; }
+  .path i.done b{ width:100%; }
+  .path i.now b{ width:55%; }
+  .theme-glow{ position:absolute; top:-60px; right:-20px; font-size:120px; line-height:1; opacity:.14; filter:blur(1px);
+    pointer-events:none; transform:rotate(8deg); transition:opacity .3s ease; }
+  .q-count{ font-size:13px; color:var(--ink-faint); margin-bottom:10px; }
+  .q-card{ transition:opacity .28s ease, transform .28s ease; }
+  .q-card.exit{ opacity:0; transform:translateY(-10px); }
+  .q-card.enter{ opacity:0; transform:translateY(10px); }
+  .q-text{ font-size:clamp(1.3rem, 3.6vw, 1.8rem); font-weight:600; line-height:1.3; margin:0 0 26px; max-width:560px; }
+  .options{ display:grid; grid-template-columns:1fr; gap:12px; }
+  @media (min-width:640px){ .options{ grid-template-columns:1fr 1fr; } }
+  .option{ text-align:left; padding:16px 18px; border:1px solid var(--line); border-radius:16px; background:rgba(255,255,255,.02);
+    color:var(--ink); font-family:'Inter',sans-serif; font-size:14.5px; font-weight:500; line-height:1.4; cursor:pointer;
+    transition:border-color .18s ease, background .18s ease, transform .15s ease; }
+  .option:hover{ border-color:var(--accent,#7c5cff); background:rgba(255,255,255,.045); }
+  .option:active{ transform:scale(.99); }
+  .option:focus-visible{ outline:2px solid var(--accent,#7c5cff); outline-offset:2px; }
+  .option.picked{ border-color:var(--accent,#7c5cff); background:rgba(124,92,255,.12); }
+  .option:disabled{ cursor:default; }
+
+  /* ---------- RESULTS ---------- */
+  #results{ flex-direction:column; }
+  .results-wrap{ width:100%; max-width:620px; margin:0 auto; text-align:center; }
+  .reveal{ padding:44px 26px 36px; border-radius:28px; border:1px solid var(--line);
+    background: radial-gradient(circle at 50% 0%, var(--field-glow, rgba(124,92,255,.25)), transparent 65%), rgba(255,255,255,.02);
+    margin-bottom:22px; animation:pop .5s cubic-bezier(.2,.9,.25,1) both; }
+  @keyframes pop{ from{opacity:0; transform:scale(.92) translateY(8px);} to{opacity:1; transform:scale(1) translateY(0);} }
+  .reveal-label{ font-size:13px; color:var(--ink-dim); margin-bottom:14px; }
+  .reveal-emoji{ font-size:64px; line-height:1; margin-bottom:14px; animation:bob 3.2s ease-in-out infinite; }
+  @keyframes bob{ 0%,100%{transform:translateY(0);} 50%{transform:translateY(-9px);} }
+  .reveal-name{ font-size:clamp(1.6rem,5.4vw,2.4rem); font-weight:700; margin:0 0 10px; }
+  .reveal-tag{ font-size:16px; color:var(--ink-dim); margin:0 0 18px; }
+  .reveal-why{ font-size:15px; line-height:1.65; color:var(--ink-dim); max-width:460px; margin:0 auto; }
+  .reveal-second{ margin-top:16px; font-size:13.5px; color:var(--ink-faint); }
+
+  .panel{ text-align:left; border:1px solid var(--line); border-radius:20px; padding:24px 22px; margin-bottom:22px; background:rgba(255,255,255,.02); }
+  .panel h3{ font-size:15px; font-weight:600; margin:0 0 12px; color:var(--ink); }
+  .panel p{ font-size:14.5px; line-height:1.65; color:var(--ink-dim); margin:0 0 14px; }
+  .chip-row{ display:flex; flex-wrap:wrap; gap:8px; }
+  .career-chip{ font-size:13px; padding:8px 14px; border-radius:100px; border:1px solid var(--line); color:var(--ink-dim); background:rgba(255,255,255,.03); }
+  .mismatch-panel{ border-color:rgba(255,255,255,.06); }
+  .mismatch-panel h3{ color:var(--ink-dim); }
+
+  .breakdown{ text-align:left; margin-bottom:22px; }
+  .breakdown h3{ font-size:14px; font-weight:600; color:var(--ink-dim); margin:0 0 16px; }
+  .bar-row{ display:flex; align-items:center; gap:12px; margin-bottom:12px; }
+  .bar-emoji{ font-size:16px; width:22px; text-align:center; flex-shrink:0; }
+  .bar-name{ font-size:13.5px; color:var(--ink-dim); width:150px; flex-shrink:0; }
+  .bar-track{ flex:1; height:8px; border-radius:8px; background:rgba(255,255,255,.06); overflow:hidden; }
+  .bar-fill{ height:100%; width:0%; border-radius:8px; transition:width 1s cubic-bezier(.2,.8,.2,1); }
+  .bar-pct{ font-size:12.5px; color:var(--ink-faint); width:38px; text-align:right; flex-shrink:0; }
+  .results-actions{ display:flex; gap:12px; justify-content:center; flex-wrap:wrap; margin-top:8px; }
+
+  @media (max-width:480px){
+    .bar-name{ width:110px; font-size:12.5px; }
+    .theme-glow{ font-size:80px; top:-30px; right:-10px; }
+  }
+  ::selection{ background:var(--accent-soft); }
+</style>
+</head>
+<body>
+
+<canvas id="bg-canvas"></canvas>
+
+<div id="app">
+
+  <section id="landing" class="screen active">
+    <div class="chip-field" id="chipField"></div>
+    <div class="landing-inner">
+      <div class="kicker">A field for every kind of mind</div>
+      <h1>Which engineering field<br>is actually yours?</h1>
+      <p>20 questions. No right answers — just the ones that sound like you. Answer honestly and we'll tell you which field fits, and why.</p>
+      <button class="btn" id="startBtn">Start the quiz</button>
+      <div class="meta-line">Takes about 3 minutes</div>
+    </div>
+  </section>
+
+  <section id="quiz" class="screen">
+    <div class="quiz-wrap">
+      <div class="path" id="path"></div>
+      <div class="theme-glow" id="themeGlow">🛠️</div>
+      <div class="q-count" id="qCount">Question 1 of 20</div>
+      <div class="q-card" id="qCard">
+        <h2 class="q-text" id="qText"></h2>
+        <div class="options" id="options"></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="results" class="screen">
+    <div class="results-wrap">
+      <div class="reveal" id="reveal">
+        <div class="reveal-label">Your best-fit field is</div>
+        <div class="reveal-emoji" id="revealEmoji">🛠️</div>
+        <h2 class="reveal-name" id="revealName">—</h2>
+        <p class="reveal-tag" id="revealTag"></p>
+        <p class="reveal-why" id="revealWhy"></p>
+        <div class="reveal-second" id="revealSecond"></div>
+      </div>
+
+      <div class="panel" id="fitPanel">
+        <h3 id="fitHeading">Why this fits, and where it goes</h3>
+        <p id="fitScope"></p>
+        <div class="chip-row" id="fitCareers"></div>
+      </div>
+
+      <div class="breakdown">
+        <h3>Full breakdown, all 15 fields</h3>
+        <div id="barsList"></div>
+      </div>
+
+      <div class="panel mismatch-panel" id="mismatchPanel">
+        <h3 id="mismatchHeading">Your least natural fit</h3>
+        <p id="mismatchText"></p>
+      </div>
+
+      <div class="results-actions">
+        <button class="btn" id="retakeBtn">Retake the quiz</button>
+        <button class="btn-ghost" id="copyBtn">Copy my result</button>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<script>
+(function(){
+
+  /* ================= FIELD DATA ================= */
+  var FIELDS = {
+    mech:   { name:"Mechanical Engineering", emoji:"🛠️", phrase:"Building the machines that move the world", color:"#ff6b35",
+              tag:"You think in motion, force, and how things actually work.",
+              why:"You default to hands-on problem solving — taking things apart, building prototypes, and trusting what you can test. Mechanical engineers turn physical intuition into everything from engines to robotics.",
+              scope:"Mechanical roles are shifting toward robotics, EVs, and advanced manufacturing, keeping demand steady worldwide.",
+              careers:["Product design engineer","Automotive engineer","Manufacturing engineer","R&D engineer"],
+              requires:"constant hands-on tinkering with physical hardware and mechanisms" },
+    elec:   { name:"Electrical Engineering", emoji:"⚡", phrase:"Powering everything from cities to phones", color:"#f1c40f",
+              tag:"You're drawn to the currents running underneath everything.",
+              why:"You gravitate toward power, circuits, and the invisible systems that keep the physical world running. Electrical engineers design the grids, motors, and devices everything else depends on.",
+              scope:"Electrification of transport and renewable grids is driving strong long-term demand for electrical engineers.",
+              careers:["Power systems engineer","Electrical design engineer","Embedded hardware engineer","Grid engineer"],
+              requires:"deep comfort with circuits, power systems, and physical electrical infrastructure" },
+    ece:    { name:"Electronics & Communication", emoji:"📡", phrase:"Making signals travel across the planet", color:"#00cec9",
+              tag:"You're wired to connect systems and signals across distance.",
+              why:"You're pulled toward the layer where hardware meets transmission — chips, sensors, and the signals that carry information anywhere. ECE engineers build the systems that let devices talk to each other.",
+              scope:"5G/6G rollout and IoT expansion keep ECE roles in steady demand across telecom and hardware.",
+              careers:["RF/comms engineer","Signal processing engineer","IoT hardware engineer","Telecom engineer"],
+              requires:"patience for signals, hardware layers, and how devices physically communicate" },
+    cs:     { name:"Computer Science", emoji:"💻", phrase:"Turning logic into software people use", color:"#6c5ce7",
+              tag:"You think in logic, systems, and clean solutions.",
+              why:"You default to solving problems through code — breaking things into logic, iterating fast, and building tools people actually use. Software is where your instincts translate directly into impact.",
+              scope:"Software remains one of the highest-demand, highest-mobility career paths globally, with new niches opening constantly.",
+              careers:["Software engineer","Full-stack developer","Backend engineer","Product engineer"],
+              requires:"sustained focus on logic, code, and iterating on abstract systems" },
+    cse:    { name:"Computer Engineering", emoji:"🧩", phrase:"Designing the hardware software runs on", color:"#a29bfe",
+              tag:"You want to understand both the machine and the code.",
+              why:"You're drawn to the boundary between hardware and software — how a chip actually executes the instructions it's given. Computer engineers design the architecture everything else runs on.",
+              scope:"Global semiconductor investment is booming, making computer engineers increasingly valuable.",
+              careers:["Chip design engineer","Embedded systems engineer","FPGA engineer","Systems architect"],
+              requires:"comfort straddling both hardware design and low-level code" },
+    robo:   { name:"Robotics & Mechatronics", emoji:"🤖", phrase:"Bringing machines to life with intelligence", color:"#00b894",
+              tag:"You want to build things that move, sense, and think.",
+              why:"You're energized by machines that combine mechanics, electronics, and intelligence into one system. Robotics engineers build the physical embodiment of automation and AI.",
+              scope:"Automation and robotics are expanding fast across manufacturing, logistics, and consumer devices.",
+              careers:["Robotics engineer","Automation engineer","Mechatronics engineer","Autonomous systems engineer"],
+              requires:"juggling mechanics, electronics, and software all at once" },
+    civil:  { name:"Civil Engineering", emoji:"🏗️", phrase:"Engineering the cities we live in", color:"#c8a165",
+              tag:"You think in structures built to outlast you.",
+              why:"You're drawn to tangible, large-scale impact — the roads, buildings, and infrastructure entire cities depend on. Civil engineers build the physical world everyone else lives inside.",
+              scope:"Rapid urbanization, especially across India, keeps steady long-term demand for civil engineers.",
+              careers:["Structural engineer","Construction project engineer","Urban infrastructure engineer","Site engineer"],
+              requires:"patience for long-timeline, large-scale physical infrastructure projects" },
+    aero:   { name:"Aerospace Engineering", emoji:"🚀", phrase:"Sending things beyond the sky", color:"#0984e3",
+              tag:"You're pulled toward the edge of what's possible.",
+              why:"You're drawn to extremes — speed, altitude, and the physics of leaving the ground entirely. Aerospace engineers design the aircraft and spacecraft that push those limits.",
+              scope:"Growing private space and defense investment is expanding aerospace opportunities worldwide.",
+              careers:["Aerospace design engineer","Propulsion engineer","Avionics engineer","Satellite systems engineer"],
+              requires:"obsession with extreme physics — flight, propulsion, and space environments" },
+    chem:   { name:"Chemical Engineering", emoji:"🧪", phrase:"Turning molecules into materials and fuel", color:"#e17055",
+              tag:"You think at the molecular level, then scale it up.",
+              why:"You're drawn to transformation — turning raw materials into fuel, medicine, and materials at industrial scale. Chemical engineers bridge chemistry and large-scale production.",
+              scope:"Chemical engineers remain essential to energy, pharma, and materials industries worldwide.",
+              careers:["Process engineer","Petrochemical engineer","Materials R&D engineer","Pharma manufacturing engineer"],
+              requires:"comfort with chemistry at both molecular and industrial scale" },
+    biomed: { name:"Biomedical Engineering", emoji:"🫀", phrase:"Merging technology with the human body", color:"#ff4d6d",
+              tag:"You want your work to heal, not just function.",
+              why:"You're drawn to problems where engineering meets the human body — prosthetics, imaging, and devices that restore function. Biomedical engineers build technology in service of health.",
+              scope:"Aging populations and medtech innovation are steadily growing demand for biomedical engineers.",
+              careers:["Medical device engineer","Biomechanics engineer","Clinical engineer","Imaging systems engineer"],
+              requires:"genuine interest in biology and the human body, not just devices" },
+    ind:    { name:"Industrial Engineering", emoji:"📊", phrase:"Making systems run smarter and faster", color:"#fdcb6e",
+              tag:"You see the system, not just the parts.",
+              why:"You default to optimizing — spotting inefficiency and redesigning how a process actually flows. Industrial engineers make complex systems, from factories to supply chains, run better.",
+              scope:"Every industry needs efficiency, making industrial engineering one of the most transferable degrees.",
+              careers:["Operations engineer","Supply chain engineer","Quality systems engineer","Process optimization engineer"],
+              requires:"patience for optimizing systems rather than building one specific thing" },
+    env:    { name:"Environmental Engineering", emoji:"🌍", phrase:"Protecting the planet through engineering", color:"#38ada9",
+              tag:"You want your career to protect something bigger than yourself.",
+              why:"You're drawn to problems with planetary stakes — clean water, waste, and pollution. Environmental engineers apply hard engineering to protect the systems we all depend on.",
+              scope:"Climate regulation and sustainability mandates are steadily growing this field worldwide.",
+              careers:["Environmental consultant","Water/wastewater engineer","Sustainability engineer","Climate systems engineer"],
+              requires:"motivation from planetary-scale impact over individual products" },
+    ai:     { name:"AI & Data Engineering", emoji:"🧠", phrase:"Teaching machines to think and predict", color:"#a06bd6",
+              tag:"You think in patterns, data, and prediction.",
+              why:"You default to finding the pattern in the noise and building systems that learn from it. AI and data engineers build the models increasingly shaping every other field.",
+              scope:"AI/ML is currently one of the fastest-growing, highest-paid engineering fields globally.",
+              careers:["Machine learning engineer","Data engineer","AI research engineer","Applied ML scientist"],
+              requires:"comfort with math, data, and abstract pattern-finding over physical building" },
+    cyber:  { name:"Cybersecurity Engineering", emoji:"🛡️", phrase:"Defending the digital world from attackers", color:"#e84393",
+              tag:"You think like both the attacker and the defender.",
+              why:"You're drawn to protecting systems before something breaks, not fixing them after. Cybersecurity engineers defend the infrastructure every other field now depends on.",
+              scope:"Cyber threats are growing faster than the security workforce, keeping demand extremely high.",
+              careers:["Security engineer","Penetration tester","Incident response analyst","Application security engineer"],
+              requires:"an adversarial mindset — constantly thinking about how systems fail or get attacked" },
+    renew:  { name:"Renewable Energy Engineering", emoji:"🌱", phrase:"Powering the future with clean energy", color:"#27ae60",
+              tag:"You want to build the energy systems of the future.",
+              why:"You're drawn to solving the energy problem at its root — solar, wind, and systems built to last. Renewable energy engineers are redesigning how the world gets its power.",
+              scope:"Global decarbonization commitments are driving major long-term investment into renewable energy roles.",
+              careers:["Solar/wind systems engineer","Energy storage engineer","Grid integration engineer","Sustainability engineer"],
+              requires:"excitement about energy infrastructure and long-term sustainability systems" }
+  };
+  var FIELD_ORDER = ["mech","elec","ece","cs","cse","robo","civil","aero","chem","biomed","ind","env","ai","cyber","renew"];
+
+  /* ================= QUESTION BANK (36) ================= */
+  var BANK = [
+    { theme:"mech", q:"Something around you just broke. What's your first move?", options:[
+      { t:"Take it apart to see how it works", s:{mech:3,robo:1} },
+      { t:"Check if it's a wiring or power issue", s:{elec:3,ece:1} },
+      { t:"Suspect it's a software glitch", s:{cs:3,cse:1} },
+      { t:"Figure out what process caused it to fail", s:{ind:3,env:1} },
+      { t:"Look up whether this keeps failing for a design reason", s:{ind:2,cse:1} },
+      { t:"Wonder if a smarter, connected version would prevent this", s:{robo:2,ai:1} }
+    ]},
+    { theme:"aero", q:"Which headline would you actually stop and click?", options:[
+      { t:"Inside the next Mars rover mission", s:{aero:3,robo:1} },
+      { t:"How your city's water really gets clean", s:{env:3,civil:1} },
+      { t:"The chip shortage that broke the world", s:{cse:3,ece:1} },
+      { t:"Can AI predict the next pandemic?", s:{ai:3,biomed:1} },
+      { t:"The new medical device that's saving lives", s:{biomed:3,chem:1} },
+      { t:"The startup building a smarter power grid", s:{renew:3,elec:1} }
+    ]},
+    { theme:"cyber", q:"A friend says their laptop just got hacked. You immediately:", options:[
+      { t:"Ask what they clicked and start tracing it", s:{cyber:3,cs:1} },
+      { t:"Check their router and network settings first", s:{ece:3,cyber:1} },
+      { t:"Wonder what flaw in the code let it happen", s:{cyber:2,cse:2} },
+      { t:"Tell them to factory reset it and move on", s:{ind:2,cs:1} },
+      { t:"Ask if their smart home devices are compromised too", s:{ece:2,cyber:2} },
+      { t:"Explain the whole thing calmly so they're not panicking", s:{ind:2,civil:1} }
+    ]},
+    { theme:"robo", q:"Pick a weekend project you'd actually enjoy:", options:[
+      { t:"Building a small robot arm", s:{robo:3,mech:1} },
+      { t:"Designing a mini bridge model", s:{civil:3,mech:1} },
+      { t:"Mixing things in a home chem kit", s:{chem:3,biomed:1} },
+      { t:"Building a wearable health tracker", s:{biomed:3,ece:1} },
+      { t:"Sketching a floor plan for a tiny house", s:{civil:3,mech:1} },
+      { t:"Setting up a small solar panel system", s:{renew:3,elec:1} }
+    ]},
+    { theme:"ind", q:"In a group project, you naturally become the one who:", options:[
+      { t:"Organizes the plan and keeps things efficient", s:{ind:3,cs:1} },
+      { t:"Writes and debugs the code", s:{cs:3,ai:1} },
+      { t:"Builds the physical prototype", s:{mech:3,robo:1} },
+      { t:"Crunches the numbers and predicts outcomes", s:{ai:3,ind:1} },
+      { t:"Tests the safety or quality of what got built", s:{chem:2,ind:2} },
+      { t:"Explains the technical parts to non-technical people", s:{civil:2,cs:1} }
+    ]},
+    { theme:"env", q:"Which problem genuinely keeps you thinking?", options:[
+      { t:"Climate change and pollution", s:{env:3,renew:2} },
+      { t:"Data breaches and privacy violations", s:{cyber:3,cse:1} },
+      { t:"Diseases we still can't cure", s:{biomed:3,chem:1} },
+      { t:"Humanity not exploring space fast enough", s:{aero:3,robo:1} },
+      { t:"Manufacturing that's wasteful and inefficient", s:{ind:3,env:1} },
+      { t:"Infrastructure that isn't built to survive disasters", s:{civil:3,env:1} }
+    ]},
+    { theme:"chem", q:"Favorite subject back in school?", options:[
+      { t:"Physics — forces, motion, energy", s:{mech:3,elec:1} },
+      { t:"Chemistry", s:{chem:3,biomed:1} },
+      { t:"Biology", s:{biomed:3,env:1} },
+      { t:"Math or computer science", s:{ai:3,cs:1} },
+      { t:"Economics or business studies", s:{ind:3,cs:1} },
+      { t:"Physical education or sports science", s:{biomed:3,mech:1} }
+    ]},
+    { theme:"civil", q:"If you had to build ONE thing this year, it'd be:", options:[
+      { t:"A robot", s:{robo:3,mech:1} },
+      { t:"A bridge or building", s:{civil:3,mech:1} },
+      { t:"An app people actually use", s:{cs:3,ai:1} },
+      { t:"A rocket or drone", s:{aero:3,robo:1} },
+      { t:"A clean water filtration system", s:{env:3,chem:1} },
+      { t:"A security system for your own home", s:{cyber:3,ece:1} }
+    ]},
+    { theme:"ind", q:"Your ideal work environment looks like:", options:[
+      { t:"A lab full of equipment and experiments", s:{chem:3,biomed:1} },
+      { t:"A factory floor, watching systems run", s:{ind:3,mech:1} },
+      { t:"A quiet desk, multiple monitors, code everywhere", s:{cs:3,cyber:1} },
+      { t:"Outdoors, on-site, hands in the actual project", s:{civil:3,env:1} },
+      { t:"A clinic or hospital setting", s:{biomed:3,chem:1} },
+      { t:"Mission control, watching a live system", s:{aero:3,cse:1} }
+    ]},
+    { theme:"cyber", q:"What frustrates you the most?", options:[
+      { t:"Inefficient, wasteful systems", s:{ind:3,env:1} },
+      { t:"Weak security that gets people hacked", s:{cyber:3,ece:1} },
+      { t:"Pollution and environmental damage", s:{env:3,renew:1} },
+      { t:"Machines that could be automated but aren't", s:{robo:3,cse:1} },
+      { t:"Bad, unsafe infrastructure design", s:{civil:3,env:1} },
+      { t:"Devices that drain energy for no reason", s:{renew:3,elec:1} }
+    ]},
+    { theme:"robo", q:"Pick the movie or show energy that speaks to you:", options:[
+      { t:"Iron Man, building suits in a garage", s:{robo:3,mech:2} },
+      { t:"Mr. Robot, hacking the system", s:{cyber:3,cs:1} },
+      { t:"Interstellar or The Martian, space and survival", s:{aero:3,chem:1} },
+      { t:"A documentary about the human body", s:{biomed:3,chem:1} },
+      { t:"Grey's Anatomy, high stakes problem solving", s:{biomed:3,chem:1} },
+      { t:"Chernobyl, systems failing at massive scale", s:{ind:3,civil:1} }
+    ]},
+    { theme:"elec", q:"Your dream invention would be:", options:[
+      { t:"A fully self-driving car", s:{robo:3,cse:2} },
+      { t:"An exosuit that helps people walk again", s:{biomed:3,mech:1} },
+      { t:"A smart power grid that never fails", s:{elec:3,renew:2} },
+      { t:"An AI that actually understands you", s:{ai:3,cs:1} },
+      { t:"A cheap water purifier for anywhere in the world", s:{env:3,chem:1} },
+      { t:"A chip that makes every device 10x faster", s:{cse:3,ece:1} }
+    ]},
+    { theme:"mech", q:"When learning something new, you prefer to:", options:[
+      { t:"Build it with your hands and see what happens", s:{mech:3,robo:1} },
+      { t:"Read the theory and run simulations", s:{aero:2,elec:2} },
+      { t:"Code it and keep iterating", s:{cs:3,ai:1} },
+      { t:"Run experiments and measure results", s:{chem:3,biomed:1} },
+      { t:"Talk it through with people who already know it", s:{ind:2,civil:1} },
+      { t:"Watch it fail a few times, then fix the process", s:{ind:3,env:1} }
+    ]},
+    { theme:"renew", q:"Which global problem would you want your career to help solve?", options:[
+      { t:"Clean, affordable energy for everyone", s:{renew:3,elec:1} },
+      { t:"Food and water security", s:{env:3,ind:1} },
+      { t:"Cyber warfare and digital security", s:{cyber:3,cse:1} },
+      { t:"Disease and healthcare access", s:{biomed:3,chem:1} },
+      { t:"Safer, smarter infrastructure in growing cities", s:{civil:3,ind:1} },
+      { t:"Better hardware for the next generation of devices", s:{cse:3,ece:1} }
+    ]},
+    { theme:"env", q:"Your ideal Sunday looks like:", options:[
+      { t:"Tinkering with gadgets in the garage", s:{mech:3,robo:1} },
+      { t:"Coding a random side project", s:{cs:3,ai:1} },
+      { t:"Reading about space or physics", s:{aero:3,elec:1} },
+      { t:"Hiking and thinking about sustainability", s:{env:3,renew:1} },
+      { t:"Volunteering or organizing something for others", s:{ind:2,biomed:1} },
+      { t:"Watching a rocket launch livestream", s:{aero:3,robo:1} }
+    ]},
+    { theme:"cyber", q:"In a crisis, you're the one who:", options:[
+      { t:"Fixes whatever hardware just failed", s:{mech:3,elec:1} },
+      { t:"Locks down the systems so nothing worse happens", s:{cyber:3,ind:1} },
+      { t:"Runs the numbers to see what's actually wrong", s:{ai:3,ind:1} },
+      { t:"Calms everyone down and organizes next steps", s:{ind:3,civil:1} },
+      { t:"Treats whoever got physically hurt", s:{biomed:3,chem:1} },
+      { t:"Redesigns the process so it never happens again", s:{ind:3,env:1} }
+    ]},
+    { theme:"civil", q:"Which word feels most like you?", options:[
+      { t:"Builder", s:{mech:3,civil:1} },
+      { t:"Protector", s:{cyber:3,biomed:1} },
+      { t:"Explorer", s:{aero:3,env:1} },
+      { t:"Connector", s:{ece:3,cse:1} },
+      { t:"Analyst", s:{ai:3,ind:1} },
+      { t:"Healer", s:{biomed:3,chem:1} }
+    ]},
+    { theme:"cs", q:"What kind of impact do you want your work to have?", options:[
+      { t:"Something tangible people can touch and use", s:{civil:3,mech:1} },
+      { t:"Invisible infrastructure that just works", s:{elec:3,cse:1} },
+      { t:"Something that lives entirely in the digital world", s:{cs:3,ai:1} },
+      { t:"Something that helps the planet or human health", s:{env:3,biomed:1} },
+      { t:"Something that keeps people and systems safe", s:{cyber:3,civil:1} },
+      { t:"Something that predicts what happens next", s:{ai:3,cse:1} }
+    ]},
+    { theme:"ece", q:"Pick a tool you'd genuinely want to master:", options:[
+      { t:"A 3D printer", s:{mech:3,robo:1} },
+      { t:"An oscilloscope", s:{ece:3,elec:1} },
+      { t:"A terminal and code editor", s:{cs:3,cyber:1} },
+      { t:"A telescope", s:{aero:3,env:1} },
+      { t:"A chemistry lab bench", s:{chem:3,biomed:1} },
+      { t:"A drafting table or CAD software", s:{civil:3,mech:1} }
+    ]},
+    { theme:"aero", q:"If money and practicality didn't matter, what would you build purely for fun?", options:[
+      { t:"A video game", s:{cs:3,ai:1} },
+      { t:"A self-sufficient smart farm", s:{env:3,ind:1} },
+      { t:"A flying drone", s:{aero:3,robo:1} },
+      { t:"A security system that's basically unhackable", s:{cyber:3,ece:1} },
+      { t:"A tiny house completely off the grid", s:{renew:3,civil:1} },
+      { t:"A diagnostic tool that could catch disease early", s:{biomed:3,ai:1} }
+    ]},
+    { theme:"cse", q:"Which of these would you rather spend hours debugging?", options:[
+      { t:"Why a circuit won't power on", s:{elec:3,ece:1} },
+      { t:"Why an app keeps crashing", s:{cs:3,cse:1} },
+      { t:"Why a chip design has a timing error", s:{cse:3,ece:1} },
+      { t:"Why a chemical reaction isn't yielding right", s:{chem:3,biomed:1} },
+      { t:"Why a security system has a hole in it", s:{cyber:3,ece:1} },
+      { t:"Why a process keeps producing defects", s:{ind:3,mech:1} }
+    ]},
+    { theme:"biomed", q:"Which achievement would make you proudest?", options:[
+      { t:"Designing a bridge that's still standing in 100 years", s:{civil:3,mech:1} },
+      { t:"Building an AI that outperforms humans at a task", s:{ai:3,cs:1} },
+      { t:"Inventing a device that helps someone walk again", s:{biomed:3,mech:1} },
+      { t:"Stopping a major cyberattack before it happened", s:{cyber:3,cse:1} },
+      { t:"Powering an entire village with solar energy", s:{renew:3,elec:1} },
+      { t:"Designing a rocket engine that actually flies", s:{aero:3,chem:1} }
+    ]},
+    { theme:"ind", q:"How do you handle a messy, chaotic situation?", options:[
+      { t:"Break it into a clear step-by-step process", s:{ind:3,civil:1} },
+      { t:"Dive in and start fixing what's broken", s:{mech:3,robo:1} },
+      { t:"Try to understand the data before doing anything", s:{ai:3,ind:1} },
+      { t:"Isolate the threat or risk first", s:{cyber:3,env:1} },
+      { t:"Calm people down, then coordinate a plan", s:{civil:2,ind:2} },
+      { t:"Look for the root chemical or physical cause", s:{chem:3,env:1} }
+    ]},
+    { theme:"renew", q:"Pick a place you'd love to visit and actually study:", options:[
+      { t:"A rocket launch site", s:{aero:3,robo:1} },
+      { t:"A solar or wind power plant", s:{renew:3,elec:1} },
+      { t:"A hospital's biomedical engineering lab", s:{biomed:3,chem:1} },
+      { t:"A tech company's server farm", s:{cse:3,cs:1} },
+      { t:"A massive construction site", s:{civil:3,mech:1} },
+      { t:"A cybersecurity operations center", s:{cyber:3,cs:1} }
+    ]},
+    { theme:"chem", q:"Which of these would actually pull you in?", options:[
+      { t:"A workshop full of half-built machines", s:{mech:3,robo:1} },
+      { t:"A room full of live circuit boards", s:{elec:3,ece:1} },
+      { t:"A chemistry lab mid-experiment", s:{chem:3,biomed:1} },
+      { t:"A construction site mid-build", s:{civil:3,mech:1} },
+      { t:"A server room humming at full load", s:{cse:3,cs:1} },
+      { t:"A wind farm on a clear day", s:{renew:3,env:1} }
+    ]},
+    { theme:"ai", q:"Pick the kind of puzzle you'd actually enjoy solving:", options:[
+      { t:"A mechanical puzzle box", s:{mech:3,robo:1} },
+      { t:"A logic or coding riddle", s:{cs:3,ai:1} },
+      { t:"A 'find the security flaw' challenge", s:{cyber:3,cse:1} },
+      { t:"A math or statistics brain teaser", s:{ai:3,ind:1} },
+      { t:"A 'diagnose the condition from symptoms' case", s:{biomed:3,chem:1} },
+      { t:"A 'design the most efficient layout' challenge", s:{ind:3,civil:1} }
+    ]},
+    { theme:"civil", q:"Which career outcome sounds the most satisfying to you?", options:[
+      { t:"Seeing something you built used by millions daily", s:{cs:3,cse:1} },
+      { t:"Walking past a building or bridge you designed", s:{civil:3,mech:1} },
+      { t:"Knowing you helped save someone's life", s:{biomed:3,chem:1} },
+      { t:"Knowing a system you secured never got breached", s:{cyber:3,ece:1} },
+      { t:"Watching something you built actually launch into space", s:{aero:3,robo:1} },
+      { t:"Knowing your work cut a company's waste in half", s:{ind:3,env:1} }
+    ]},
+    { theme:"ece", q:"Pick a skill you'd want to be known for:", options:[
+      { t:"Being the person who can fix any machine", s:{mech:3,robo:1} },
+      { t:"Being the person who can build anything with code", s:{cs:3,ai:1} },
+      { t:"Being the person no hacker can get past", s:{cyber:3,cse:1} },
+      { t:"Being the person who designs unbreakable circuits", s:{elec:3,ece:1} },
+      { t:"Being the person who makes complex systems efficient", s:{ind:3,civil:1} },
+      { t:"Being the person who understands how the body works", s:{biomed:3,chem:1} }
+    ]},
+    { theme:"env", q:"If you had to give a talk, the topic would be:", options:[
+      { t:"How climate tech can actually save us", s:{env:3,renew:2} },
+      { t:"Why AI is about to change everything", s:{ai:3,cs:1} },
+      { t:"Why cybersecurity is everyone's problem now", s:{cyber:3,ece:1} },
+      { t:"How space exploration is humanity's next chapter", s:{aero:3,robo:1} },
+      { t:"How better design saves lives in medicine", s:{biomed:3,chem:1} },
+      { t:"How small efficiency gains save massive money", s:{ind:3,mech:1} }
+    ]},
+    { theme:"mech", q:"Which superpower would you actually pick?", options:[
+      { t:"Build or fix anything instantly with your hands", s:{mech:3,robo:1} },
+      { t:"See every security flaw in any system", s:{cyber:3,cse:1} },
+      { t:"Understand and heal any part of the human body", s:{biomed:3,chem:1} },
+      { t:"Predict any outcome from data alone", s:{ai:3,ind:1} },
+      { t:"Control electricity itself", s:{elec:3,renew:1} },
+      { t:"Fly, literally", s:{aero:3,robo:1} }
+    ]},
+    { theme:"cyber", q:"Pick the fear that feels most real to you:", options:[
+      { t:"A bridge or building collapsing", s:{civil:3,mech:1} },
+      { t:"Your data being stolen without you knowing", s:{cyber:3,cs:1} },
+      { t:"A machine malfunctioning around people", s:{mech:3,robo:1} },
+      { t:"The planet running out of clean resources", s:{env:3,renew:1} },
+      { t:"A misdiagnosis or medical failure", s:{biomed:3,chem:1} },
+      { t:"A rocket or plane failing mid-flight", s:{aero:3,ece:1} }
+    ]},
+    { theme:"ai", q:"Which of these numbers would you rather obsess over?", options:[
+      { t:"Load-bearing capacity and stress tolerances", s:{civil:3,mech:1} },
+      { t:"Voltage, current, and resistance", s:{elec:3,ece:1} },
+      { t:"Lines of code and system latency", s:{cs:3,cse:1} },
+      { t:"Model accuracy and prediction error", s:{ai:3,ind:1} },
+      { t:"Dosage, concentration, reaction yield", s:{chem:3,biomed:1} },
+      { t:"Uptime, breach attempts, response time", s:{cyber:3,cse:1} }
+    ]},
+    { theme:"robo", q:"What would your friends say you'd be great at building?", options:[
+      { t:"A robot that actually works", s:{robo:3,mech:1} },
+      { t:"An app everyone would use", s:{cs:3,ai:1} },
+      { t:"A system that keeps everyone's data safe", s:{cyber:3,ece:1} },
+      { t:"A device that helps someone's health", s:{biomed:3,chem:1} },
+      { t:"Something that runs entirely on solar power", s:{renew:3,elec:1} },
+      { t:"A perfectly efficient process for anything", s:{ind:3,civil:1} }
+    ]},
+    { theme:"aero", q:"You're most likely to lose hours reading about:", options:[
+      { t:"Space missions and rocket engines", s:{aero:3,chem:1} },
+      { t:"How the human brain or body actually works", s:{biomed:3,ai:1} },
+      { t:"The newest AI models and what they can do", s:{ai:3,cs:1} },
+      { t:"How major hacks and breaches actually happened", s:{cyber:3,cse:1} },
+      { t:"How megacities are engineered to function", s:{civil:3,ind:1} },
+      { t:"How renewable grids are replacing fossil fuels", s:{renew:3,elec:1} }
+    ]},
+    { theme:"elec", q:"Which is the most satisfying kind of 'it works' moment for you?", options:[
+      { t:"A mechanism finally fitting together perfectly", s:{mech:3,robo:1} },
+      { t:"Code finally running with zero errors", s:{cs:3,ai:1} },
+      { t:"A circuit lighting up exactly as designed", s:{elec:3,ece:1} },
+      { t:"A security test coming back completely clean", s:{cyber:3,cse:1} },
+      { t:"A structure passing every safety check", s:{civil:3,ind:1} },
+      { t:"Lab results finally matching your hypothesis", s:{chem:3,biomed:1} }
+    ]},
+    { theme:"ind", q:"Last one — what does success look like for you in 10 years?", options:[
+      { t:"Running my own engineering-driven company", s:{ind:3,cs:1} },
+      { t:"Being a world-class expert in one deep technical niche", s:{cse:3,ece:1} },
+      { t:"Having built something that physically changed a city", s:{civil:3,mech:1} },
+      { t:"Having built something that touches millions of users", s:{cs:3,ai:1} },
+      { t:"Having helped cure or treat a major disease", s:{biomed:3,chem:1} },
+      { t:"Having helped move the world to clean energy", s:{renew:3,env:1} }
+    ]}
+  ];
+
+  var SET_SIZE = 20;
+
+  function circularSlice(start, size){
+    var n = BANK.length, out = [];
+    for (var i=0;i<size;i++) out.push(BANK[(start+i) % n]);
+    return out;
+  }
+  function seededShuffle(arr, seed){
+    var a = arr.slice();
+    var s = seed;
+    function rnd(){ s = (s*9301+49297) % 233280; return s/233280; }
+    for (var i=a.length-1;i>0;i--){
+      var j = Math.floor(rnd()*(i+1));
+      var tmp=a[i]; a[i]=a[j]; a[j]=tmp;
+    }
+    return a;
+  }
+  function getSetForAttempt(attemptIndex){
+    if (attemptIndex === 0) return circularSlice(0, SET_SIZE);
+    if (attemptIndex === 1) return circularSlice(12, SET_SIZE);
+    if (attemptIndex === 2) return circularSlice(24, SET_SIZE);
+    return seededShuffle(BANK, 1000 + attemptIndex).slice(0, SET_SIZE);
+  }
+
+  /* ================= STATE ================= */
+  var attemptIndex = -1; // becomes 0 on first Start
+  var activeQuestions = [];
+  var current = 0;
+  var chosen = [];
+  var busy = false;
+
+  var landing = document.getElementById('landing');
+  var quiz = document.getElementById('quiz');
+  var results = document.getElementById('results');
+
+  function showScreen(el){
+    [landing, quiz, results].forEach(function(s){ s.classList.remove('active'); });
+    el.classList.add('active');
+  }
+
+  (function buildChips(){
+    var field = document.getElementById('chipField');
+    FIELD_ORDER.forEach(function(id, i){
+      var f = FIELDS[id];
+      var chip = document.createElement('div');
+      chip.className = 'chip';
+      chip.innerHTML = '<span class="e">' + f.emoji + '</span><span>' + f.phrase + '</span>';
+      var top = 6 + (i * 6.3) % 88;
+      var left = (i % 2 === 0) ? (4 + (i * 11) % 40) : (54 + (i * 9) % 42);
+      chip.style.top = top + '%';
+      chip.style.left = left + '%';
+      chip.style.animationDuration = (7 + (i % 5)) + 's';
+      chip.style.animationDelay = (-(i * 0.6)) + 's';
+      field.appendChild(chip);
+    });
+  })();
+
+  (function particles(){
+    var c = document.getElementById('bg-canvas');
+    var ctx = c.getContext('2d');
+    var w, h, dpr = Math.min(window.devicePixelRatio || 1, 2);
+    var pts = [], N = 46;
+    function resize(){
+      w = window.innerWidth; h = window.innerHeight;
+      c.width = w * dpr; c.height = h * dpr;
+      c.style.width = w + 'px'; c.style.height = h + 'px';
+      ctx.setTransform(dpr,0,0,dpr,0,0);
+    }
+    function init(){
+      pts = [];
+      for (var i=0;i<N;i++){
+        pts.push({ x: Math.random()*w, y: Math.random()*h,
+          vx: (Math.random()-0.5)*0.18, vy: (Math.random()-0.5)*0.18, r: Math.random()*1.6 + 0.6 });
+      }
+    }
+    function tick(){
+      ctx.clearRect(0,0,w,h);
+      for (var i=0;i<pts.length;i++){
+        var p = pts[i];
+        p.x += p.vx; p.y += p.vy;
+        if (p.x < 0) p.x = w; if (p.x > w) p.x = 0;
+        if (p.y < 0) p.y = h; if (p.y > h) p.y = 0;
+      }
+      for (var i=0;i<pts.length;i++){
+        for (var j=i+1;j<pts.length;j++){
+          var a = pts[i], b = pts[j];
+          var dx = a.x-b.x, dy = a.y-b.y, d = Math.sqrt(dx*dx+dy*dy);
+          if (d < 130){
+            ctx.strokeStyle = 'rgba(150,140,220,' + (0.09 * (1 - d/130)) + ')';
+            ctx.lineWidth = 1;
+            ctx.beginPath(); ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y); ctx.stroke();
+          }
+        }
+      }
+      for (var i=0;i<pts.length;i++){
+        var p = pts[i];
+        ctx.fillStyle = 'rgba(200,192,255,.55)';
+        ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2); ctx.fill();
+      }
+      requestAnimationFrame(tick);
+    }
+    try{ resize(); init(); tick(); window.addEventListener('resize', function(){ resize(); init(); }); }
+    catch(e){ /* fail silently, gradient bg still shows */ }
+  })();
+
+  (function buildPath(){
+    var wrap = document.getElementById('path');
+    for (var i=0;i<SET_SIZE;i++){
+      var d = document.createElement('i');
+      d.innerHTML = '<b></b>';
+      wrap.appendChild(d);
+    }
+  })();
+  function updatePath(){
+    var items = document.querySelectorAll('#path i');
+    items.forEach(function(el, i){
+      el.classList.remove('done','now');
+      if (i < current) el.classList.add('done');
+      else if (i === current) el.classList.add('now');
+    });
+  }
+
+  function renderQuestion(){
+    var q = activeQuestions[current];
+    var theme = FIELDS[q.theme];
+    document.getElementById('quiz').style.setProperty('--accent', theme.color);
+    document.getElementById('themeGlow').textContent = theme.emoji;
+    document.getElementById('qCount').textContent = 'Question ' + (current+1) + ' of ' + activeQuestions.length;
+    document.getElementById('qText').textContent = q.q;
+
+    var optWrap = document.getElementById('options');
+    optWrap.innerHTML = '';
+    q.options.forEach(function(opt, idx){
+      var btn = document.createElement('button');
+      btn.className = 'option';
+      btn.type = 'button';
+      btn.textContent = opt.t;
+      btn.addEventListener('click', function(){ selectOption(idx); });
+      optWrap.appendChild(btn);
+    });
+    updatePath();
+  }
+
+  function selectOption(idx){
+    if (busy) return;
+    busy = true;
+    chosen[current] = idx;
+
+    var buttons = document.querySelectorAll('#options .option');
+    buttons.forEach(function(b, i){ b.disabled = true; if (i === idx) b.classList.add('picked'); });
+
+    var card = document.getElementById('qCard');
+    setTimeout(function(){
+      card.classList.add('exit');
+      setTimeout(function(){
+        current++;
+        if (current < activeQuestions.length){
+          renderQuestion();
+          card.classList.remove('exit');
+          card.classList.add('enter');
+          requestAnimationFrame(function(){ requestAnimationFrame(function(){ card.classList.remove('enter'); }); });
+          busy = false;
+        } else {
+          computeAndShowResults();
+        }
+      }, 260);
+    }, 220);
+  }
+
+  function computeAndShowResults(){
+    var totals = {}, maxes = {};
+    FIELD_ORDER.forEach(function(id){ totals[id] = 0; maxes[id] = 0; });
+
+    activeQuestions.forEach(function(q, i){
+      var pick = chosen[i];
+      var chosenScores = (pick !== null && pick !== undefined) ? q.options[pick].s : {};
+      Object.keys(chosenScores).forEach(function(id){ totals[id] = (totals[id] || 0) + chosenScores[id]; });
+      var perQMax = {};
+      q.options.forEach(function(opt){
+        Object.keys(opt.s).forEach(function(id){ perQMax[id] = Math.max(perQMax[id] || 0, opt.s[id]); });
+      });
+      Object.keys(perQMax).forEach(function(id){ maxes[id] = (maxes[id] || 0) + perQMax[id]; });
+    });
+
+    var ranked = FIELD_ORDER.map(function(id){
+      var pct = maxes[id] > 0 ? Math.round((totals[id] / maxes[id]) * 100) : 0;
+      return { id:id, pct:pct, raw:totals[id] };
+    }).sort(function(a,b){ if (b.pct !== a.pct) return b.pct - a.pct; return b.raw - a.raw; });
+
+    renderResults(ranked);
+    showScreen(results);
+    window.scrollTo(0,0);
+  }
+
+  function hexToRgba(hex, a){
+    var h = hex.replace('#','');
+    var r = parseInt(h.substring(0,2),16), g = parseInt(h.substring(2,4),16), b = parseInt(h.substring(4,6),16);
+    return 'rgba(' + r + ',' + g + ',' + b + ',' + a + ')';
+  }
+
+  function renderResults(ranked){
+    var top = ranked[0], second = ranked[1], worst = ranked[ranked.length-1];
+    var topField = FIELDS[top.id], worstField = FIELDS[worst.id];
+
+    document.getElementById('reveal').style.setProperty('--field-glow', hexToRgba(topField.color, .28));
+    document.getElementById('revealEmoji').textContent = topField.emoji;
+    document.getElementById('revealName').textContent = topField.name;
+    document.getElementById('revealName').style.color = topField.color;
+    document.getElementById('revealTag').textContent = topField.tag;
+    document.getElementById('revealWhy').textContent = topField.why;
+    document.getElementById('revealSecond').textContent = second
+      ? 'Strong secondary pull toward ' + FIELDS[second.id].name + ' (' + second.pct + '% match).'
+      : '';
+
+    document.getElementById('fitHeading').textContent = 'Where ' + topField.name + ' could take you';
+    document.getElementById('fitScope').textContent = topField.scope;
+    var careersWrap = document.getElementById('fitCareers');
+    careersWrap.innerHTML = '';
+    topField.careers.forEach(function(c){
+      var chip = document.createElement('span');
+      chip.className = 'career-chip';
+      chip.textContent = c;
+      careersWrap.appendChild(chip);
+    });
+
+    var list = document.getElementById('barsList');
+    list.innerHTML = '';
+    ranked.forEach(function(r){
+      var f = FIELDS[r.id];
+      var row = document.createElement('div');
+      row.className = 'bar-row';
+      row.innerHTML =
+        '<span class="bar-emoji">' + f.emoji + '</span>' +
+        '<span class="bar-name">' + f.name + '</span>' +
+        '<span class="bar-track"><span class="bar-fill" style="background:' + f.color + '"></span></span>' +
+        '<span class="bar-pct">' + r.pct + '%</span>';
+      list.appendChild(row);
+    });
+    requestAnimationFrame(function(){
+      setTimeout(function(){
+        var fills = document.querySelectorAll('.bar-fill');
+        ranked.forEach(function(r, i){ fills[i].style.width = r.pct + '%'; });
+      }, 60);
+    });
+
+    document.getElementById('mismatchHeading').textContent = worstField.name + ' — your least natural fit';
+    document.getElementById('mismatchText').textContent =
+      worstField.name + ' scored lowest for you at ' + worst.pct + '%. It centers on ' + worstField.requires +
+      ' — based on your answers, that just is not where your instincts naturally go, and that is useful to know too.';
+
+    window._lastResult = { top: topField.name, pct: top.pct, second: second ? FIELDS[second.id].name : null };
+  }
+
+  document.getElementById('startBtn').addEventListener('click', function(){
+    attemptIndex = 0;
+    activeQuestions = getSetForAttempt(attemptIndex);
+    current = 0; chosen = new Array(activeQuestions.length).fill(null); busy = false;
+    renderQuestion();
+    showScreen(quiz);
+  });
+
+  document.getElementById('retakeBtn').addEventListener('click', function(){
+    attemptIndex++;
+    activeQuestions = getSetForAttempt(attemptIndex);
+    current = 0; chosen = new Array(activeQuestions.length).fill(null); busy = false;
+    renderQuestion();
+    showScreen(quiz);
+    window.scrollTo(0,0);
+  });
+
+  document.getElementById('copyBtn').addEventListener('click', function(){
+    var r = window._lastResult;
+    if (!r) return;
+    var text = "I got " + r.top + " (" + r.pct + "% match) on the Engineering Field quiz!";
+    var btn = document.getElementById('copyBtn');
+    function done(){ var old = btn.textContent; btn.textContent = 'Copied!'; setTimeout(function(){ btn.textContent = old; }, 1600); }
+    if (navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(done).catch(function(){ done(); });
+    } else { done(); }
+  });
+
+})();
+</script>
+</body>
+</html>
