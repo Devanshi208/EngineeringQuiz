@@ -839,33 +839,19 @@
 
   var SET_SIZE = 20;
 
-  function circularSlice(start, size){
-    var n = BANK.length, out = [];
-    for (var i=0;i<size;i++) out.push(BANK[(start+i) % n]);
-    return out;
-  }
-  function seededShuffle(arr, seed){
+  function trueShuffle(arr){
     var a = arr.slice();
-    var s = seed;
-    function rnd(){ s = (s*9301+49297) % 233280; return s/233280; }
     for (var i=a.length-1;i>0;i--){
-      var j = Math.floor(rnd()*(i+1));
+      var j = Math.floor(Math.random()*(i+1));
       var tmp=a[i]; a[i]=a[j]; a[j]=tmp;
     }
     return a;
   }
-  function getSetForAttempt(attemptIndex){
-    // Bank is 50 questions. First two attempts use fully separate 20-question
-    // halves (0-19 and 20-39) so a retake never repeats a question from the
-    // first run. Third attempt uses the remaining tail plus wraparound.
-    if (attemptIndex === 0) return circularSlice(0, SET_SIZE);
-    if (attemptIndex === 1) return circularSlice(20, SET_SIZE);
-    if (attemptIndex === 2) return circularSlice(40, SET_SIZE);
-    return seededShuffle(BANK, 1000 + attemptIndex).slice(0, SET_SIZE);
+  function getRandomSet(){
+    return trueShuffle(BANK).slice(0, SET_SIZE);
   }
 
   /* ================= STATE ================= */
-  var attemptIndex = -1; // becomes 0 on first Start
   var activeQuestions = [];
   var current = 0;
   var chosen = [];
@@ -1101,7 +1087,7 @@
     var fbButtons = fbRow.querySelectorAll('.fb-btn');
     fbButtons.forEach(function(b){ b.classList.remove('chosen'); b.disabled = false; });
 
-    logResult(topField.name, top.pct, second ? FIELDS[second.id].name : null, attemptIndex)
+    logResult(topField.name, top.pct, second ? FIELDS[second.id].name : null, null)
       .then(function(id){ currentResultId = id; });
   }
 
@@ -1112,16 +1098,14 @@
   }
 
   document.getElementById('startBtn').addEventListener('click', function(){
-    attemptIndex = 0;
-    activeQuestions = getSetForAttempt(attemptIndex);
+    activeQuestions = getRandomSet();
     current = 0; chosen = new Array(activeQuestions.length).fill(null); busy = false;
     renderQuestion();
     showScreen(quiz);
   });
 
   document.getElementById('retakeBtn').addEventListener('click', function(){
-    attemptIndex++;
-    activeQuestions = getSetForAttempt(attemptIndex);
+    activeQuestions = getRandomSet();
     current = 0; chosen = new Array(activeQuestions.length).fill(null); busy = false;
     renderQuestion();
     showScreen(quiz);
