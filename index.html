@@ -50,6 +50,17 @@
     backdrop-filter:blur(6px); font-size:13px; color:var(--ink-dim); white-space:nowrap;
     opacity:.55; animation:drift linear infinite; }
   .chip .e{font-size:16px;}
+  @media (max-width:640px){
+    .chip{ font-size:10.5px; padding:6px 10px; opacity:.22; }
+    .chip:nth-child(n+9){ display:none; }
+    .landing-inner{
+      background:rgba(7,6,13,.62);
+      backdrop-filter:blur(14px);
+      border-radius:28px;
+      padding:34px 20px;
+      border:1px solid var(--line);
+    }
+  }
   @keyframes drift{
     0%{ transform:translateY(0) translateX(0) rotate(0deg); }
     50%{ transform:translateY(-22px) translateX(10px) rotate(1.5deg); }
@@ -585,13 +596,125 @@
       { t:"A structure passing every safety check", s:{civil:3,ind:1} },
       { t:"Lab results finally matching your hypothesis", s:{chem:3,biomed:1} }
     ]},
-    { theme:"ind", q:"Last one — what does success look like for you in 10 years?", options:[
+    { theme:"ind", q:"What does success look like for you in 10 years?", options:[
       { t:"Running my own engineering-driven company", s:{ind:3,cs:1} },
       { t:"Being a world-class expert in one deep technical niche", s:{cse:3,ece:1} },
       { t:"Having built something that physically changed a city", s:{civil:3,mech:1} },
       { t:"Having built something that touches millions of users", s:{cs:3,ai:1} },
       { t:"Having helped cure or treat a major disease", s:{biomed:3,chem:1} },
       { t:"Having helped move the world to clean energy", s:{renew:3,env:1} }
+    ]},
+    { theme:"chem", q:"Which class project would you actually want to lead?", options:[
+      { t:"Building a working model engine", s:{mech:3,robo:1} },
+      { t:"Coding a mobile app for the class", s:{cs:3,ai:1} },
+      { t:"Testing water samples from local sources", s:{env:3,chem:1} },
+      { t:"Designing the poster/booth layout efficiently", s:{ind:3,civil:1} },
+      { t:"Setting up the class's wifi network", s:{ece:3,cse:1} },
+      { t:"Building a simple prosthetic hand model", s:{biomed:3,mech:1} }
+    ]},
+    { theme:"cse", q:"Pick a YouTube rabbit hole you'd actually fall into:", options:[
+      { t:"How CPUs are actually manufactured", s:{cse:3,ece:1} },
+      { t:"How black holes and rockets work", s:{aero:3,elec:1} },
+      { t:"How hackers break into companies", s:{cyber:3,cs:1} },
+      { t:"How vaccines are developed", s:{biomed:3,chem:1} },
+      { t:"How skyscrapers don't fall down", s:{civil:3,mech:1} },
+      { t:"How factories run without humans", s:{ind:3,robo:1} }
+    ]},
+    { theme:"robo", q:"If you joined a startup tomorrow, you'd want to be the one who:", options:[
+      { t:"Builds the actual physical product", s:{mech:3,robo:1} },
+      { t:"Writes the app from scratch", s:{cs:3,cse:1} },
+      { t:"Makes sure hackers can't touch it", s:{cyber:3,ece:1} },
+      { t:"Figures out how to scale it efficiently", s:{ind:3,ai:1} },
+      { t:"Designs how it's powered sustainably", s:{renew:3,elec:1} },
+      { t:"Tests it for safety and health impact", s:{biomed:3,chem:1} }
+    ]},
+    { theme:"env", q:"Which cause would you actually donate your time to?", options:[
+      { t:"Cleaning up a polluted river", s:{env:3,chem:1} },
+      { t:"Teaching kids to code", s:{cs:3,ai:1} },
+      { t:"Building wheelchairs for people who need them", s:{biomed:3,mech:1} },
+      { t:"Helping a village get electricity", s:{elec:3,renew:1} },
+      { t:"Auditing a nonprofit's cybersecurity", s:{cyber:3,cse:1} },
+      { t:"Redesigning a shelter's daily operations", s:{ind:3,civil:1} }
+    ]},
+    { theme:"aero", q:"Pick the kind of 'wow' that gets you the most:", options:[
+      { t:"A rocket landing itself perfectly", s:{aero:3,robo:1} },
+      { t:"An AI writing working code in seconds", s:{ai:3,cs:1} },
+      { t:"A building that survived an earthquake", s:{civil:3,mech:1} },
+      { t:"A hacked system getting patched in real time", s:{cyber:3,cse:1} },
+      { t:"A prosthetic limb moving like a real one", s:{biomed:3,mech:1} },
+      { t:"A whole city running on solar power", s:{renew:3,elec:1} }
+    ]},
+    { theme:"ind", q:"How do you feel about repetitive, detail-heavy work?", options:[
+      { t:"Love it if it means everything runs smoother", s:{ind:3,civil:1} },
+      { t:"Only if it's debugging code", s:{cs:3,cse:1} },
+      { t:"Only if it's lab testing or measurements", s:{chem:3,biomed:1} },
+      { t:"Only if it's securing something", s:{cyber:3,ece:1} },
+      { t:"Not really, I want to build big physical things", s:{mech:3,aero:1} },
+      { t:"Only if it involves numbers and patterns", s:{ai:3,ind:1} }
+    ]},
+    { theme:"elec", q:"Which of these would you rather talk about for hours?", options:[
+      { t:"How to build the perfect engine", s:{mech:3,aero:1} },
+      { t:"Whether AI will take over jobs", s:{ai:3,cs:1} },
+      { t:"The ethics of data privacy", s:{cyber:3,ai:1} },
+      { t:"How cities should be designed", s:{civil:3,ind:1} },
+      { t:"How the human body actually heals itself", s:{biomed:3,chem:1} },
+      { t:"How we electrify everything by 2050", s:{renew:3,elec:1} }
+    ]},
+    { theme:"civil", q:"Pick the type of broken system that annoys you most:", options:[
+      { t:"A building with bad structural design", s:{civil:3,mech:1} },
+      { t:"An app with a terrible user experience", s:{cs:3,ai:1} },
+      { t:"A company that keeps getting hacked", s:{cyber:3,cse:1} },
+      { t:"A supply chain that wastes everything", s:{ind:3,env:1} },
+      { t:"A hospital with outdated equipment", s:{biomed:3,chem:1} },
+      { t:"A grid that can't handle renewable energy", s:{renew:3,elec:1} }
+    ]},
+    { theme:"biomed", q:"What would you want written on your future LinkedIn headline?", options:[
+      { t:"Building machines that build the future", s:{mech:3,robo:1} },
+      { t:"Turning data into decisions", s:{ai:3,cs:1} },
+      { t:"Keeping the world's systems secure", s:{cyber:3,cse:1} },
+      { t:"Engineering the cities of tomorrow", s:{civil:3,ind:1} },
+      { t:"Engineering health, one device at a time", s:{biomed:3,chem:1} },
+      { t:"Powering the planet, sustainably", s:{renew:3,elec:1} }
+    ]},
+    { theme:"cyber", q:"Pick a documentary you'd actually watch tonight:", options:[
+      { t:"Inside the world's biggest data breach", s:{cyber:3,cs:1} },
+      { t:"How SpaceX builds rockets", s:{aero:3,robo:1} },
+      { t:"Inside a hospital's ICU", s:{biomed:3,chem:1} },
+      { t:"How mega-bridges get built", s:{civil:3,mech:1} },
+      { t:"The rise of AI and what's next", s:{ai:3,cse:1} },
+      { t:"How solar farms are changing energy", s:{renew:3,env:1} }
+    ]},
+    { theme:"ai", q:"You just got unlimited funding for a passion project. You build:", options:[
+      { t:"A fleet of autonomous delivery robots", s:{robo:3,mech:1} },
+      { t:"A social app that actually helps people", s:{cs:3,ai:1} },
+      { t:"A cybersecurity firm that protects small businesses", s:{cyber:3,cse:1} },
+      { t:"A biotech lab researching cures", s:{biomed:3,chem:1} },
+      { t:"A city-scale renewable energy grid", s:{renew:3,elec:1} },
+      { t:"A disaster-proof housing system", s:{civil:3,env:1} }
+    ]},
+    { theme:"mech", q:"Pick the compliment that would mean the most to you:", options:[
+      { t:"You're so good with your hands", s:{mech:3,robo:1} },
+      { t:"You think like a computer", s:{cs:3,cse:1} },
+      { t:"You'd make a great detective", s:{cyber:3,ai:1} },
+      { t:"You'd make a great doctor", s:{biomed:3,chem:1} },
+      { t:"You should run this company", s:{ind:3,civil:1} },
+      { t:"You should work for NASA or ISRO", s:{aero:3,elec:1} }
+    ]},
+    { theme:"renew", q:"If your career had a mascot, it'd be:", options:[
+      { t:"A wrench", s:{mech:3,robo:1} },
+      { t:"A laptop", s:{cs:3,ai:1} },
+      { t:"A padlock", s:{cyber:3,cse:1} },
+      { t:"A stethoscope", s:{biomed:3,chem:1} },
+      { t:"A solar panel", s:{renew:3,elec:1} },
+      { t:"A crane", s:{civil:3,ind:1} }
+    ]},
+    { theme:"ai", q:"Last one, promise — pick your final answer instinctively:", options:[
+      { t:"Build it", s:{mech:3,robo:1} },
+      { t:"Code it", s:{cs:3,ai:1} },
+      { t:"Secure it", s:{cyber:3,cse:1} },
+      { t:"Heal it", s:{biomed:3,chem:1} },
+      { t:"Power it", s:{renew:3,elec:1} },
+      { t:"Optimize it", s:{ind:3,civil:1} }
     ]}
   ];
 
@@ -613,9 +736,12 @@
     return a;
   }
   function getSetForAttempt(attemptIndex){
+    // Bank is 50 questions. First two attempts use fully separate 20-question
+    // halves (0-19 and 20-39) so a retake never repeats a question from the
+    // first run. Third attempt uses the remaining tail plus wraparound.
     if (attemptIndex === 0) return circularSlice(0, SET_SIZE);
-    if (attemptIndex === 1) return circularSlice(12, SET_SIZE);
-    if (attemptIndex === 2) return circularSlice(24, SET_SIZE);
+    if (attemptIndex === 1) return circularSlice(20, SET_SIZE);
+    if (attemptIndex === 2) return circularSlice(40, SET_SIZE);
     return seededShuffle(BANK, 1000 + attemptIndex).slice(0, SET_SIZE);
   }
 
